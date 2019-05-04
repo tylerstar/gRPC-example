@@ -70,6 +70,33 @@ func (*server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAvera
 	}
 }
 
+func (*server) FindMaxNumber(stream calculatorpb.CalculatorService_FindMaxNumberServer) error {
+	fmt.Println("FindMaxNumber function was invoked...")
+	var maxNumber int32 = 0
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Failed to reading streaming: %v", err)
+			return err
+		}
+		number := res.GetNumber()
+		if number > maxNumber {
+			maxNumber = number
+			err = stream.Send(&calculatorpb.FindMaxNumberResponse{
+				Result: maxNumber,
+			})
+			if err != nil {
+				log.Fatalf("Failed to send message to the clinet: %v", err)
+				return err
+			}
+		}
+	}
+}
+
 func main() {
 	fmt.Println("Calculator Server is starting...")
 
